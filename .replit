@@ -1,0 +1,78 @@
+modules = ["nodejs-20", "bash", "web"]
+run = "npm run dev"
+hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+deploymentTarget = "cloudrun"
+run = ["sh", "-c", "npm run dev"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Configure Shopify"
+author = 40383517
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Please enter your Shopify store name (without .myshopify.com):\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "read STORE_NAME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Please enter your Shopify Storefront API Token:\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "read API_TOKEN"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Updating .env file with your Shopify credentials...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sed -i \"s/SHOPIFY_STORE_NAME=your-store-name/SHOPIFY_STORE_NAME=$STORE_NAME/\" .env"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sed -i \"s/SHOPIFY_STOREFRONT_API_TOKEN=your-storefront-api-token/SHOPIFY_STOREFRONT_API_TOKEN=$API_TOKEN/\" .env"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Shopify credentials updated successfully!\""
